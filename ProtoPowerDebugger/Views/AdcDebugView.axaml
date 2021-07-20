@@ -1,0 +1,172 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
+             x:Class="ProtoPowerDebugger.Views.AdcDebugView">
+
+  <Grid RowDefinitions="70, 140, *">
+
+    <StackPanel Orientation="Horizontal"
+                VerticalAlignment="Center"
+                Margin="20"
+                Grid.Row="0">
+      <TextBlock Text="Port: " VerticalAlignment="Center"/>
+      <ComboBox Items="{Binding SerialPortList}"
+                    SelectedIndex="{Binding PortNum}"
+                    HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding !CommsStarted}"/>
+      <ToggleButton Content="{Binding PortOpenCloseText}"
+                    Margin="20 0 0 0"
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    FontWeight="SemiBold"
+                    IsChecked="{Binding CommsStarted}"
+                    Command="{Binding SerialStartStop}"/>
+    </StackPanel>
+
+    <Border Grid.Row="1"
+            CornerRadius="5"
+            BorderBrush="Black"
+            BorderThickness="4"
+            Margin="5 5 5 5">
+    <Grid Grid.Row="1"
+          ColumnDefinitions="*,*,*,*">
+      <StackPanel Orientation="Vertical"
+                  Grid.Column="0">
+        <TextBlock Text="Primary uA"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"
+                   FontWeight="SemiBold"
+                   Margin="5 5 5 5"/>
+        <Panel Background="Black"
+               Margin="10 10 10 10"
+               Height="80">
+          <TextBlock Text="{Binding AdcData.PrimaryMicroAmp}"
+                     Foreground="Aquamarine"
+                     FontWeight="DemiBold"
+                     Margin="10 10 10 10"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"
+                     FontSize="24"/>
+        </Panel>
+      </StackPanel>
+
+      <StackPanel Orientation="Vertical"
+                  Grid.Column="1">
+        <TextBlock Text="Primary V"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"
+                   FontWeight="SemiBold"
+                   Margin="5 5 5 5"/>
+        <Panel Background="Black"
+               Margin="10 10 10 10"
+               Height="80">
+          <TextBlock Text="{Binding AdcData.PrimaryVolt}"
+                     Foreground="Aquamarine"
+                     FontWeight="DemiBold"
+                     Margin="10 10 10 10"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"
+                     FontSize="24"/>
+        </Panel>
+      </StackPanel>
+
+      <StackPanel Orientation="Vertical"
+                  Grid.Column="2">
+        <TextBlock Text="Aux uA"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"
+                   FontWeight="SemiBold"
+                   Margin="5 5 5 5"/>
+        <Panel Background="Black"
+               Margin="10 10 10 10"
+               Height="80">
+          <TextBlock Text="{Binding AdcData.AuxMicroAmp}"
+                     Foreground="Aquamarine"
+                     FontWeight="DemiBold"
+                     Margin="10 10 10 10"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"
+                     FontSize="24"/>
+        </Panel>
+      </StackPanel>
+
+      <StackPanel Orientation="Vertical"
+                  Grid.Column="3">
+        <TextBlock Text="Aux V"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"
+                   FontWeight="SemiBold"
+                   Margin="5 5 5 5"/>
+        <Panel Background="Black"
+               Margin="10 10 10 10"
+               Height="80">
+          <TextBlock Text="{Binding AdcData.AuxVolt}"
+                     Foreground="Aquamarine"
+                     FontWeight="DemiBold"
+                     Margin="10 10 10 10"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"
+                     FontSize="24"/>
+        </Panel>
+      </StackPanel>      
+    </Grid>
+    </Border>
+
+    <Grid Grid.Row="2"
+          ColumnDefinitions="*, *">
+      <StackPanel Orientation="Vertical" Grid.Column="0">
+        <ToggleButton Content="Enable Primary Output"
+                      HorizontalAlignment="Center"
+                      Margin="5 5 5 5"
+                      Width="200"
+                      HorizontalContentAlignment="Center"
+                      IsEnabled="{Binding CommsStarted}">          
+        </ToggleButton>
+        <ToggleSwitch Content="10R Shunt"
+                      HorizontalAlignment="Center"
+                      Margin="5"
+                      IsEnabled="{Binding CommsStarted}">          
+        </ToggleSwitch>
+        <ToggleSwitch Content="1R Shunt"
+                      HorizontalAlignment="Center"
+                      Margin="5"
+                      IsEnabled="{Binding CommsStarted}">
+        </ToggleSwitch>
+        <ToggleSwitch Content="Passthrough"
+                      HorizontalAlignment="Center"
+                      Margin="5"
+                      IsEnabled="{Binding CommsStarted}">
+        </ToggleSwitch>
+      </StackPanel>
+
+      <StackPanel Orientation="Vertical" Grid.Column="1">
+        <ToggleButton Content="Enable Aux Output"
+                      HorizontalAlignment="Center"
+                      Margin="5 5 5 5"
+                      Width="200"
+                      HorizontalContentAlignment="Center"
+                      IsEnabled="{Binding CommsStarted}">
+        </ToggleButton>
+        <ToggleSwitch Content="10R Shunt"
+                      HorizontalAlignment="Center"
+                      Margin="5"
+                      IsEnabled="{Binding CommsStarted}">
+        </ToggleSwitch>
+        <ToggleSwitch Content="1R Shunt"
+                      HorizontalAlignment="Center"
+                      Margin="5"
+                      IsEnabled="{Binding CommsStarted}">
+        </ToggleSwitch>
+        <ToggleSwitch Content="Passthrough"
+                      HorizontalAlignment="Center"
+                      Margin="5"
+                      IsEnabled="{Binding CommsStarted}">
+        </ToggleSwitch>
+      </StackPanel>
+    </Grid>
+    
+  </Grid>
+  
+</UserControl>
