@@ -1,4 +1,5 @@
-﻿using ProtoPowerDebugger.Models;
+﻿using DynamicData;
+using ProtoPowerDebugger.Models;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
@@ -45,7 +46,7 @@ namespace ProtoPowerDebugger.Services
             return new Unsubscriber(observers, observer);
         }
 
-        RawAdcData rawData = new();
+        RawAdcData rawAdcData = new();
 
         SerialPort? serialPort;
 
@@ -115,7 +116,6 @@ namespace ProtoPowerDebugger.Services
         private void SerialDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             SerialPort sp = (SerialPort)sender;
-
             while (sp.BytesToRead > 0 && readEnabled)
             {
                 string indata = sp.ReadLine();
@@ -124,15 +124,14 @@ namespace ProtoPowerDebugger.Services
 
                 if (indata.Length == 8)     // Discards data in edge case where new line escape character appears sooner than expected.
                 {
-                    rawData.AuxVolt = BitConverter.ToUInt16(bytes, 0);
-                    rawData.AuxMicroAmp = BitConverter.ToUInt16(bytes, 2);
-                    rawData.PrimaryVolt = BitConverter.ToUInt16(bytes, 4);
-                    rawData.PrimaryMicroAmp = BitConverter.ToUInt16(bytes, 6);
-
+                    rawAdcData.AuxVolt = BitConverter.ToUInt16(bytes, 0);
+                    rawAdcData.AuxMicroAmp = BitConverter.ToUInt16(bytes, 2);
+                    rawAdcData.PrimaryVolt = BitConverter.ToUInt16(bytes, 4);
+                    rawAdcData.PrimaryMicroAmp = BitConverter.ToUInt16(bytes, 6);                   
                     if (observers != null)
                     {
                         foreach (var observer in observers)
-                            observer.OnNext(rawData);
+                            observer.OnNext(rawAdcData);
                     }
                 }
             }

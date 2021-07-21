@@ -58,17 +58,23 @@ namespace ProtoPowerDebugger.ViewModels
             private set => this.RaiseAndSetIfChanged(ref serialPortList, value);
         }
 
-        private RawAdcData? adcData;
-        public RawAdcData? AdcData
+        private RawAdcData adcData;
+        public RawAdcData AdcData
         {
             get { return adcData; }
             private set => this.RaiseAndSetIfChanged(ref adcData, value);
         }
 
+        private RawSerialData serialData;
+        public RawSerialData SerialData
+        {
+            get { return serialData; }
+            private set => this.RaiseAndSetIfChanged(ref serialData, value);
+        }
+
         public AdcDebugViewModel()
         {
             SerialPortList = SerialPort.GetPortNames();
-            AdcData = new RawAdcData();
             serialDataService.Subscribe(this);
         }
 
@@ -91,6 +97,10 @@ namespace ProtoPowerDebugger.ViewModels
                 AuxMicroAmp = value.AuxMicroAmp,
                 AuxVolt = value.AuxVolt
             };
+            SerialData = new RawSerialData
+            {
+                ReceivedData = value
+            };            
         }
 
         public void SerialStartStop()
