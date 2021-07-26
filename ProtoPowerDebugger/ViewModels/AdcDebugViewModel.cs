@@ -14,7 +14,7 @@ namespace ProtoPowerDebugger.ViewModels
 {
     public class AdcDebugViewModel : ViewModelBase, IObserver<RawAdcData>
     {
-        SerialDataService serialDataService = new SerialDataService();
+        SerialDataService serialDataService = new SerialDataService(10);
 
         private string portOpenCloseText = "Open";
         public string PortOpenCloseText
@@ -58,15 +58,17 @@ namespace ProtoPowerDebugger.ViewModels
             private set => this.RaiseAndSetIfChanged(ref serialPortList, value);
         }
 
-        private RawAdcData adcData;
-        public RawAdcData AdcData
+        private RawAdcData? adcData;
+        public RawAdcData? AdcData
         {
             get { return adcData; }
             private set => this.RaiseAndSetIfChanged(ref adcData, value);
+            //private set => this.RaisePropertyChanged("adcData");
+
         }
 
-        private RawSerialData serialData;
-        public RawSerialData SerialData
+        private RawSerialData? serialData;
+        public RawSerialData? SerialData
         {
             get { return serialData; }
             private set => this.RaiseAndSetIfChanged(ref serialData, value);
@@ -85,11 +87,17 @@ namespace ProtoPowerDebugger.ViewModels
 
         public void OnError(Exception error)
         {
-            // Do Nothing
+            serialDataService.Stop();
+            serialDataService.Close();
+            PortOpenCloseText = "Open";
+
+            string errorMessage = "Fatal error:\n" + error.Message;
+
         }
 
         public void OnNext(RawAdcData value)
         {
+            //AdcData = value;
             AdcData = new RawAdcData
             {
                 PrimaryVolt = value.PrimaryVolt,
@@ -107,14 +115,12 @@ namespace ProtoPowerDebugger.ViewModels
         {
             if (!CommsStarted)
             {
-                //serialComms.ReadRawDataStop();
                 serialDataService.Stop();
                 serialDataService.Close();
                 PortOpenCloseText = "Open";
             }
             else
             {
-                //serialComms.ReadRawDataStart(SerialPortList[PortNum]);
                 if (SerialPortList?[PortNum] != null)
                 {
                     if (serialDataService.Open(SerialPortList[PortNum]) >= 0)
@@ -141,5 +147,7 @@ namespace ProtoPowerDebugger.ViewModels
                 }
             }
         }
+    
+
     }
 }

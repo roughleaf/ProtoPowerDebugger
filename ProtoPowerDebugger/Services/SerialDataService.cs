@@ -13,12 +13,14 @@ namespace ProtoPowerDebugger.Services
     class SerialDataService : IObservable<RawAdcData>
     {
         bool readEnabled = false;
+        int bufferLength = 0;
 
         static List<IObserver<RawAdcData>>? observers;
 
-        public SerialDataService()
+        public SerialDataService(int size)
         {
             observers = new List<IObserver<RawAdcData>>();
+            bufferLength = size;
         }
 
         private class Unsubscriber : IDisposable
@@ -41,7 +43,9 @@ namespace ProtoPowerDebugger.Services
         public IDisposable Subscribe(IObserver<RawAdcData> observer)
         {
             if (!observers.Contains(observer))
+            {
                 observers.Add(observer);
+            }
 
             return new Unsubscriber(observers, observer);
         }
@@ -108,34 +112,54 @@ namespace ProtoPowerDebugger.Services
             }
         }
 
-
     // TODO:
-    // 1. Add start character to string
-    // 2. Check string length when newline escape character is received. If less then required, add ASCII code 10 character to string and continue
-    // 3. String length indicated complete, check for start and end character at start and end of received string to verify that a valid stream was received.
+    // 1. Impliment try/catch to the ReadLine function and send exception error to observer.OnError
         private void SerialDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            SerialPort sp = (SerialPort)sender;
-            while (sp.BytesToRead > 0 && readEnabled)
+            try
             {
-                string indata = sp.ReadLine();
-                //string indata = sp.ReadExisting();
-                byte[] bytes = Encoding.ASCII.GetBytes(indata);
-
-                if (indata.Length == 8)     // Discards data in edge case where new line escape character appears sooner than expected.
+                SerialPort sp = (SerialPort)sender;
+                while (sp.BytesToRead > 0 && readEnabled)       // The entire string needs to be read in a single itterartion of this loop            {
                 {
-                    rawAdcData.AuxVolt = BitConverter.ToUInt16(bytes, 0);
-                    rawAdcData.AuxMicroAmp = BitConverter.ToUInt16(bytes, 2);
-                    rawAdcData.PrimaryVolt = BitConverter.ToUInt16(bytes, 4);
-                    rawAdcData.PrimaryMicroAmp = BitConverter.ToUInt16(bytes, 6);                   
-                    if (observers != null)
+
+                    string indata = sp.ReadLine();
+
+                    if (indata.StartsWith('<'))                 // If the 1st character is wrong then you know the whole thing is going to be wrong and is discarded
                     {
-                        foreach (var observer in observers)
-                            observer.OnNext(rawAdcData);
+                        while (indata.Length < bufferLength)    // This loop reads until the entire string is read or discarded
+                        {
+                            indata += '\n';                     // A premature readline should only happen when a '\n' or 10 is the value in one of the bytes
+                            indata += sp.ReadLine();
+                        }
+
+                        if (indata.StartsWith('<')
+                            && indata.EndsWith('>')
+                            && (indata.Length == bufferLength))     // Discards if received data is invalid
+                        {
+                            byte[] bytes = Encoding.ASCII.GetBytes(indata);
+                            rawAdcData.AuxVolt = BitConverter.ToUInt16(bytes, 1);
+                            rawAdcData.AuxMicroAmp = BitConverter.ToUInt16(bytes, 3);
+                            rawAdcData.PrimaryVolt = BitConverter.ToUInt16(bytes, 5);
+                            rawAdcData.PrimaryMicroAmp = BitConverter.ToUInt16(bytes, 7);
+                            if (observers != null)
+                            {
+                                foreach (var observer in observers)
+                                    observer.OnNext(rawAdcData);
+                            }
+                        }
                     }
+
+                }
+            }
+            catch (Exception err)
+            {
+                if (observers != null)
+                {
+                    foreach (var observer in observers)
+                        observer.OnError(err);
                 }
             }
         }
-
     }
 }
+    
