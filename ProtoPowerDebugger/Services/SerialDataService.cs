@@ -13,7 +13,7 @@ namespace ProtoPowerDebugger.Services
     class SerialDataService : IObservable<RawAdcData>
     {
         bool readEnabled = false;
-        int bufferLength = 0;
+        readonly int bufferLength = 0;
 
         static List<IObserver<RawAdcData>>? observers;
 
@@ -50,7 +50,7 @@ namespace ProtoPowerDebugger.Services
             return new Unsubscriber(observers, observer);
         }
 
-        RawAdcData rawAdcData = new();
+        readonly RawAdcData rawAdcData = new();
 
         SerialPort? serialPort;
 
@@ -64,6 +64,8 @@ namespace ProtoPowerDebugger.Services
             serialPort.DataBits = 8;
             serialPort.Handshake = Handshake.None;
             serialPort.RtsEnable = false;
+            serialPort.ReadTimeout = 500;
+            serialPort.WriteTimeout = 500;
 
             //_serialPort.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);
             serialPort.DataReceived += SerialDataReceived;
@@ -116,49 +118,50 @@ namespace ProtoPowerDebugger.Services
     // 1. Impliment try/catch to the ReadLine function and send exception error to observer.OnError
         private void SerialDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            try
-            {
-                SerialPort sp = (SerialPort)sender;
-                while (sp.BytesToRead > 0 && readEnabled)       // The entire string needs to be read in a single itterartion of this loop            {
+            SerialPort sp = (SerialPort)sender;
+                
+            while (sp.BytesToRead > 0 && readEnabled)       // The entire string needs to be read in a single itterartion of this loop            {
                 {
-
-                    string indata = sp.ReadLine();
-
-                    if (indata.StartsWith('<'))                 // If the 1st character is wrong then you know the whole thing is going to be wrong and is discarded
+                    try
                     {
-                        while (indata.Length < bufferLength)    // This loop reads until the entire string is read or discarded
-                        {
-                            indata += '\n';                     // A premature readline should only happen when a '\n' or 10 is the value in one of the bytes
-                            indata += sp.ReadLine();
-                        }
+                        string indata = sp.ReadLine();
 
-                        if (indata.StartsWith('<')
-                            && indata.EndsWith('>')
-                            && (indata.Length == bufferLength))     // Discards if received data is invalid
+                        if (indata.StartsWith('<'))                 // If the 1st character is wrong then you know the whole thing is going to be wrong and is discarded
                         {
-                            byte[] bytes = Encoding.ASCII.GetBytes(indata);
-                            rawAdcData.AuxVolt = BitConverter.ToUInt16(bytes, 1);
-                            rawAdcData.AuxMicroAmp = BitConverter.ToUInt16(bytes, 3);
-                            rawAdcData.PrimaryVolt = BitConverter.ToUInt16(bytes, 5);
-                            rawAdcData.PrimaryMicroAmp = BitConverter.ToUInt16(bytes, 7);
-                            if (observers != null)
+                            while (indata.Length < bufferLength)    // This loop reads until the entire string is read or discarded
                             {
-                                foreach (var observer in observers)
-                                    observer.OnNext(rawAdcData);
+                                indata += '\n';                     // A premature readline should only happen when a '\n' or 10 is the value in one of the bytes
+                                indata += sp.ReadLine();
+                            }
+
+                            if (indata.StartsWith('<')
+                                && indata.EndsWith('>')
+                                && (indata.Length == bufferLength))     // Discards if received data is invalid
+                            {
+                                byte[] bytes = Encoding.ASCII.GetBytes(indata);
+                                rawAdcData.AuxVolt = BitConverter.ToUInt16(bytes, 1);
+                                rawAdcData.AuxMicroAmp = BitConverter.ToUInt16(bytes, 3);
+                                rawAdcData.PrimaryVolt = BitConverter.ToUInt16(bytes, 5);
+                                rawAdcData.PrimaryMicroAmp = BitConverter.ToUInt16(bytes, 7);
+                                if (observers != null)
+                                {
+                                    foreach (var observer in observers)
+                                        observer.OnNext(rawAdcData);
+                                }
                             }
                         }
-                    }
 
+                    }
+                    catch (Exception err)
+                    {
+                        if (observers != null)
+                        {
+                            foreach (var observer in observers)
+                                observer.OnError(err);
+                        }
+                        break;
+                    }
                 }
-            }
-            catch (Exception err)
-            {
-                if (observers != null)
-                {
-                    foreach (var observer in observers)
-                        observer.OnError(err);
-                }
-            }
         }
     }
 }

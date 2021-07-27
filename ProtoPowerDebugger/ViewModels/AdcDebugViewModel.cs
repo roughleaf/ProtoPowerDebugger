@@ -14,7 +14,7 @@ namespace ProtoPowerDebugger.ViewModels
 {
     public class AdcDebugViewModel : ViewModelBase, IObserver<RawAdcData>
     {
-        SerialDataService serialDataService = new SerialDataService(10);
+        readonly SerialDataService serialDataService = new(10);
 
         private string portOpenCloseText = "Open";
         public string PortOpenCloseText
@@ -90,6 +90,7 @@ namespace ProtoPowerDebugger.ViewModels
             serialDataService.Stop();
             serialDataService.Close();
             PortOpenCloseText = "Open";
+            CommsStarted = false;
 
             string errorMessage = "Fatal error:\n" + error.Message;
 
