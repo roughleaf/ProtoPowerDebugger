@@ -122,7 +122,9 @@
                       Margin="5 5 5 5"
                       Width="200"
                       HorizontalContentAlignment="Center"
-                      IsEnabled="{Binding CommsStarted}">          
+                      IsEnabled="{Binding CommsStarted}"
+					  IsChecked="{Binding PrimaryOutputEnabled}"
+					  Command="{Binding PrimaryOutputEnable}">          
         </ToggleButton>
         <ToggleSwitch Content="10R Shunt"
                       HorizontalAlignment="Center"
@@ -147,7 +149,9 @@
                       Margin="5 5 5 5"
                       Width="200"
                       HorizontalContentAlignment="Center"
-                      IsEnabled="{Binding CommsStarted}">
+                      IsEnabled="{Binding CommsStarted}"
+					  IsChecked="{Binding AuxOutputEnabled}"
+					  Command="{Binding AuxOutputEnable}">
         </ToggleButton>
         <ToggleSwitch Content="10R Shunt"
                       HorizontalAlignment="Center"

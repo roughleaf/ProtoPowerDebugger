@@ -121,47 +121,44 @@ namespace ProtoPowerDebugger.Services
             SerialPort sp = (SerialPort)sender;
                 
             while (sp.BytesToRead > 0 && readEnabled)       // The entire string needs to be read in a single itterartion of this loop            {
+            {
+                try
                 {
-                    try
-                    {
-                        string indata = sp.ReadLine();
+                    byte[] bytes = new byte[9];
+                    int bytesToRead = 8;
 
-                        if (indata.StartsWith('<'))                 // If the 1st character is wrong then you know the whole thing is going to be wrong and is discarded
+                    int bytesRead = sp.Read(bytes, 0, 1);
+
+                    if ((bytesRead == 1) && (bytes[0] == '<'))
+                    {
+                        do
                         {
-                            while (indata.Length < bufferLength)    // This loop reads until the entire string is read or discarded
-                            {
-                                indata += '\n';                     // A premature readline should only happen when a '\n' or 10 is the value in one of the bytes
-                                indata += sp.ReadLine();
-                            }
+                            bytesRead += sp.Read(bytes, bytesRead, bytesToRead);
+                            bytesToRead -= bytesRead;
+                        } while (bytesToRead > 0);
 
-                            if (indata.StartsWith('<')
-                                && indata.EndsWith('>')
-                                && (indata.Length == bufferLength))     // Discards if received data is invalid
-                            {
-                                byte[] bytes = Encoding.ASCII.GetBytes(indata);
-                                rawAdcData.AuxVolt = BitConverter.ToUInt16(bytes, 1);
-                                rawAdcData.AuxMicroAmp = BitConverter.ToUInt16(bytes, 3);
-                                rawAdcData.PrimaryVolt = BitConverter.ToUInt16(bytes, 5);
-                                rawAdcData.PrimaryMicroAmp = BitConverter.ToUInt16(bytes, 7);
-                                if (observers != null)
-                                {
-                                    foreach (var observer in observers)
-                                        observer.OnNext(rawAdcData);
-                                }
-                            }
-                        }
 
-                    }
-                    catch (Exception err)
-                    {
+                        rawAdcData.AuxVolt = BitConverter.ToUInt16(bytes, 1);
+                        rawAdcData.AuxMicroAmp = BitConverter.ToUInt16(bytes, 3);
+                        rawAdcData.PrimaryVolt = BitConverter.ToUInt16(bytes, 5);
+                        rawAdcData.PrimaryMicroAmp = BitConverter.ToUInt16(bytes, 7);
                         if (observers != null)
                         {
                             foreach (var observer in observers)
-                                observer.OnError(err);
+                                observer.OnNext(rawAdcData);
                         }
-                        break;
                     }
                 }
+                catch (Exception err)
+                {
+                    if (observers != null)
+                    {
+                        foreach (var observer in observers)
+                            observer.OnError(err);
+                    }
+                    break;
+                }
+            }
         }
     }
 }

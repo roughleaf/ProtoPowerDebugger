@@ -148,7 +148,34 @@ namespace ProtoPowerDebugger.ViewModels
                 }
             }
         }
-    
+
+        public void PrimaryOutputEnable()
+        {
+            if (PrimaryOutputEnabled)
+            {
+                serialDataService.Write("0");
+                //serialComms.WriteSerialByte('0');
+            }
+            else
+            {
+                serialDataService.Write("1");
+                //serialComms.WriteSerialByte('1');
+            }
+        }
+
+        public void AuxOutputEnable()
+        {
+            if (AuxOutputEnabled)
+            {
+                serialDataService.Write("2");
+                //serialComms.WriteSerialByte('2');
+            }
+            else
+            {
+                serialDataService.Write("3");
+                //serialComms.WriteSerialByte('3');
+            }
+        }
 
     }
 }
